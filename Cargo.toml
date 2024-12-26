@@ -2,6 +2,7 @@
 name = "tfhe_encrypted_calculator"
 version = "0.1.0"
 edition = "2021"
+default-run = "tfhe_encrypted_calculator"
 
 [dependencies]
 tfhe = { version = "0.8.7", features = [ "boolean", "shortint", "integer", "aarch64-unix" ] }
