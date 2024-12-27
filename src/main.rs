@@ -1,3 +1,17 @@
+/// This is a simple calculator that uses TFHE to perform operations on encrypted data.
+/// The calculator supports addition, subtraction, multiplication, division, and modulo operations.
+/// The calculator uses the Rust implementation of TFHE.
+/// The calculator uses the default parameters for the TFHE keys.
+/// The calculator saves the keys to files and loads them when performing operations.
+/// The calculator uses the `bincode` crate to serialize and deserialize the keys.
+/// The calculator uses the `clap` crate to parse command-line arguments.
+/// The calculator uses the `tfhe` crate to perform the operations on encrypted data.
+/// The calculator uses the `tfhe::prelude` module to simplify the code.
+/// The calculator uses the `tfhe::ClientKey` and `tfhe::ServerKey` types to store the keys.
+/// The calculator uses the `tfhe::generate_keys` function to generate the keys.
+/// The calculator uses the `tfhe::set_server_key` function to set the server key.
+/// The calculator uses the `tfhe::ConfigBuilder` type to build the configuration for the keys.
+/// The calculator uses the `tfhe::FheUint8` type to perform operations on encrypted data.
 use bincode;
 use clap::{Parser, Subcommand};
 use std::fs::{create_dir_all, File};
