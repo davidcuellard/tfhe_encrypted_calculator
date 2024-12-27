@@ -21,6 +21,7 @@ use tfhe::ClientKey;
 use tfhe::ServerKey;
 use tfhe::{generate_keys, set_server_key, ConfigBuilder, FheUint8};
 
+/// Command-line interface for the calculator
 #[derive(Parser)]
 #[command(
     name = "z-calculator",
@@ -31,12 +32,15 @@ struct Cli {
     command: Commands,
 }
 
+/// Enum representing the different commands the calculator can execute
 #[derive(Subcommand)]
 enum Commands {
+    /// Generate keys and save them to files
     GenerateKeys {
         #[clap(short, long, default_value = "/tmp/z_calculator")]
         dir: String,
     },
+    /// Perform addition on encrypted data
     Add {
         #[clap(short, long)]
         a: u8,
@@ -47,6 +51,7 @@ enum Commands {
         #[clap(short, long, default_value = "/tmp/z_calculator/client_key.bin")]
         client_key_path: String,
     },
+    /// Perform subtraction on encrypted data
     Sub {
         #[clap(short, long)]
         a: u8,
@@ -57,6 +62,7 @@ enum Commands {
         #[clap(short, long, default_value = "/tmp/z_calculator/client_key.bin")]
         client_key_path: String,
     },
+    /// Perform multiplication on encrypted data
     Mul {
         #[clap(short, long)]
         a: u8,
@@ -67,6 +73,7 @@ enum Commands {
         #[clap(short, long, default_value = "/tmp/z_calculator/client_key.bin")]
         client_key_path: String,
     },
+    /// Perform division on encrypted data
     Div {
         #[clap(short, long)]
         a: u8,
@@ -77,6 +84,7 @@ enum Commands {
         #[clap(short, long, default_value = "/tmp/z_calculator/client_key.bin")]
         client_key_path: String,
     },
+    /// Perform modulo on encrypted data
     Mod {
         #[clap(short, long)]
         a: u8,
@@ -141,14 +149,18 @@ fn main() {
     }
 }
 
-/// Serialize the keys to bytes and save them to files
+/// Generate keys and save them to files
+///
+/// # Arguments
+///
+/// * `dir` - The directory to save the keys
 fn generate_and_save_keys(dir: &str) {
-    // We generate a set of client/server keys, using the default parameters:
+    // Generate a set of client/server keys, using the default parameters:
     let config = ConfigBuilder::default().build();
 
     let (client_key, server_key) = generate_keys(config);
 
-    // We serialize the keys to bytes:
+    // Serialize the keys to bytes:
     let encoded_server_key: Vec<u8> = bincode::serialize(&server_key).unwrap();
     let encoded_client_key: Vec<u8> = bincode::serialize(&client_key).unwrap();
 
@@ -157,7 +169,7 @@ fn generate_and_save_keys(dir: &str) {
     let server_key_file = &format!("{dir}/server_key.bin");
     let client_key_file = &format!("{dir}/client_key.bin");
 
-    // We write the keys to files:
+    // Write the keys to files:
     let mut file = File::create(server_key_file).expect("failed to create server key file");
     file.write_all(encoded_server_key.as_slice())
         .expect("failed to write key to file");
@@ -166,6 +178,15 @@ fn generate_and_save_keys(dir: &str) {
         .expect("failed to write key to file");
 }
 
+/// Load a key from a file
+///
+/// # Arguments
+///
+/// * `path` - The path to the key file
+///
+/// # Returns
+///
+/// The deserialized key
 fn load_key<T>(path: &str) -> T
 where
     T: serde::de::DeserializeOwned,
@@ -177,6 +198,19 @@ where
     bincode::deserialize(&encoded_key[..]).expect("Failed to deserialize key")
 }
 
+/// Perform an operation on encrypted data
+///
+/// # Arguments
+///
+/// * `a` - The first operand
+/// * `b` - The second operand
+/// * `server_key` - The server key
+/// * `client_key` - The client key
+/// * `operation` - The operation to perform
+///
+/// # Returns
+///
+/// The result of the operation
 fn perform_operation(
     a: &u8,
     b: &u8,
@@ -194,6 +228,15 @@ fn perform_operation(
     result.decrypt(client_key)
 }
 
+/// Handle an operation command
+///
+/// # Arguments
+///
+/// * `a` - The first operand
+/// * `b` - The second operand
+/// * `server_key_path` - The path to the server key file
+/// * `client_key_path` - The path to the client key file
+/// * `operation` - The operation to perform
 fn handle_operation(
     a: &u8,
     b: &u8,

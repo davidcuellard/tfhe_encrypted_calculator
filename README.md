@@ -1,4 +1,4 @@
-# Z-Calculator
+# TFHE Encrypted Calculator
 
 ## Overview
 
@@ -20,6 +20,12 @@ The following dependencies are used in this project:
 - tfhe: The library for performing TFHE operations.
 - bincode: Used for serializing and deserializing the keys.
 - clap: Used for parsing command-line arguments.
+
+Run:
+
+```bash
+cargo build
+```
 
 ## Commands
 
@@ -90,6 +96,36 @@ z-calculator add --a 5 --b 3 --server-key-path /tmp/z_calculator/server_key.bin 
 ```
 
 This will encrypt the numbers 5 and 3, add them, and print the decrypted result.
+
+## Docs
+
+To run the docs, the nightly toolchain is needed. Here are the steps:
+
+1. Install the nightly toolchain:
+
+```bash
+rustup toolchain install nightly
+```
+
+2. Use the nightly toolchain: You can either set the nightly toolchain as the default for your project or for the current terminal session.
+
+- To set the nightly toolchain as the default for your project, run this command in your project directory:
+
+```bash
+  rustup override set nightly
+```
+
+- To use the nightly toolchain for the current terminal session, run:
+
+```bash
+rustup default nightly
+```
+
+3. Generate and open the documentation:
+
+```bash
+ cargo doc --open
+```
 
 ## License
 
