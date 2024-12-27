@@ -1,3 +1,4 @@
+use bincode;
 use clap::{Parser, Subcommand};
 use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
@@ -5,7 +6,6 @@ use tfhe::prelude::*;
 use tfhe::ClientKey;
 use tfhe::ServerKey;
 use tfhe::{generate_keys, set_server_key, ConfigBuilder, FheUint8};
-use bincode;
 
 #[derive(Parser)]
 #[command(
@@ -88,22 +88,7 @@ fn main() {
             server_key_path,
             client_key_path,
         } => {
-            let server_key = load_server_key(server_key_path);
-            let client_key = load_client_key(client_key_path);
-
-            set_server_key(server_key);
-
-            let clear_a = a;
-            let clear_b = b;
-
-            let a = FheUint8::try_encrypt(*clear_a, &client_key).unwrap();
-            let b = FheUint8::try_encrypt(*clear_b, &client_key).unwrap();
-
-            let sum = a + b;
-            let decrypted_sum: u8 = sum.decrypt(&client_key);
-
-            println!("Clear inputs: {} + {}", clear_a, clear_b);
-            println!("Decrypted result: {}", decrypted_sum);
+            handle_operation(a, b, server_key_path, client_key_path, |a, b| a + b);
         }
         Commands::Sub {
             a,
@@ -111,22 +96,7 @@ fn main() {
             server_key_path,
             client_key_path,
         } => {
-            let server_key = load_server_key(server_key_path);
-            let client_key = load_client_key(client_key_path);
-
-            set_server_key(server_key);
-            let clear_a = a;
-            let clear_b = b;
-
-            let a = FheUint8::try_encrypt(*clear_a, &client_key).unwrap();
-            let b = FheUint8::try_encrypt(*clear_b, &client_key).unwrap();
-
-            let sum = a - b;
-
-            let decrypted_sum: u8 = sum.decrypt(&client_key);
-
-            println!("Clear inputs: {} + {}", clear_a, clear_b);
-            println!("Decrypted result: {}", decrypted_sum);
+            handle_operation(a, b, server_key_path, client_key_path, |a, b| a - b);
         }
         Commands::Mul {
             a,
@@ -134,22 +104,7 @@ fn main() {
             server_key_path,
             client_key_path,
         } => {
-            let server_key = load_server_key(server_key_path);
-            let client_key = load_client_key(client_key_path);
-
-            set_server_key(server_key);
-            let clear_a = a;
-            let clear_b = b;
-
-            let a = FheUint8::try_encrypt(*clear_a, &client_key).unwrap();
-            let b = FheUint8::try_encrypt(*clear_b, &client_key).unwrap();
-
-            let sum = a * b;
-
-            let decrypted_sum: u8 = sum.decrypt(&client_key);
-
-            println!("Clear inputs: {} + {}", clear_a, clear_b);
-            println!("Decrypted result: {}", decrypted_sum);
+            handle_operation(a, b, server_key_path, client_key_path, |a, b| a * b);
         }
         Commands::Div {
             a,
@@ -158,23 +113,7 @@ fn main() {
             client_key_path,
         } => {
             assert_ne!(*b, 0, "Cannot divide by zero");
-            let server_key = load_server_key(server_key_path);
-            let client_key = load_client_key(client_key_path);
-
-            set_server_key(server_key);
-
-            let clear_a = a;
-            let clear_b = b;
-
-            let a = FheUint8::try_encrypt(*clear_a, &client_key).unwrap();
-            let b = FheUint8::try_encrypt(*clear_b, &client_key).unwrap();
-
-            let sum = a / b;
-
-            let decrypted_sum: u8 = sum.decrypt(&client_key);
-
-            println!("Clear inputs: {} + {}", clear_a, clear_b);
-            println!("Decrypted result: {}", decrypted_sum);
+            handle_operation(a, b, server_key_path, client_key_path, |a, b| a / b);
         }
         Commands::Mod {
             a,
@@ -183,23 +122,7 @@ fn main() {
             client_key_path,
         } => {
             assert_ne!(*b, 0, "Cannot divide by zero");
-            let server_key = load_server_key(server_key_path);
-            let client_key = load_client_key(client_key_path);
-
-            set_server_key(server_key);
-
-            let clear_a = a;
-            let clear_b = b;
-
-            let a = FheUint8::try_encrypt(*clear_a, &client_key).unwrap();
-            let b = FheUint8::try_encrypt(*clear_b, &client_key).unwrap();
-
-            let sum = a % b;
-
-            let decrypted_sum: u8 = sum.decrypt(&client_key);
-
-            println!("Clear inputs: {} + {}", clear_a, clear_b);
-            println!("Decrypted result: {}", decrypted_sum);
+            handle_operation(a, b, server_key_path, client_key_path, |a, b| a % b);
         }
     }
 }
@@ -220,8 +143,6 @@ fn generate_and_save_keys(dir: &str) {
     let server_key_file = &format!("{dir}/server_key.bin");
     let client_key_file = &format!("{dir}/client_key.bin");
 
-    println!("server_key_file: {:?}", server_key_file);
-
     // We write the keys to files:
     let mut file = File::create(server_key_file).expect("failed to create server key file");
     file.write_all(encoded_server_key.as_slice())
@@ -231,20 +152,45 @@ fn generate_and_save_keys(dir: &str) {
         .expect("failed to write key to file");
 }
 
-/// Load a server key from a file
-fn load_server_key(path: &str) -> ServerKey {
-    let mut file = File::open(path).expect("Failed to open server key file");
+fn load_key<T>(path: &str) -> T
+where
+    T: serde::de::DeserializeOwned,
+{
+    let mut file = File::open(path).expect("Failed to open key file");
     let mut encoded_key: Vec<u8> = Vec::new();
     file.read_to_end(&mut encoded_key)
-        .expect("Failed to read server key");
-    bincode::deserialize(&encoded_key[..]).expect("Failed to deserialize server key")
+        .expect("Failed to read key file");
+    bincode::deserialize(&encoded_key[..]).expect("Failed to deserialize key")
 }
 
-/// Load a client key from a file
-fn load_client_key(path: &str) -> ClientKey {
-    let mut file = File::open(path).expect("Failed to open server key file");
-    let mut encoded_key: Vec<u8> = Vec::new();
-    file.read_to_end(&mut encoded_key)
-        .expect("Failed to read server key");
-    bincode::deserialize(&encoded_key[..]).expect("Failed to deserialize server key")
+fn perform_operation(
+    a: &u8,
+    b: &u8,
+    server_key: ServerKey,
+    client_key: &ClientKey,
+    operation: fn(FheUint8, FheUint8) -> FheUint8,
+) -> u8 {
+    set_server_key(server_key);
+
+    let a = FheUint8::try_encrypt(*a, client_key).expect("Encryption of 'a' failed");
+    let b = FheUint8::try_encrypt(*b, client_key).expect("Encryption of 'b' failed");
+
+    let result = operation(a, b);
+
+    result.decrypt(client_key)
+}
+
+fn handle_operation(
+    a: &u8,
+    b: &u8,
+    server_key_path: &str,
+    client_key_path: &str,
+    operation: fn(FheUint8, FheUint8) -> FheUint8,
+) {
+    let server_key = load_key(server_key_path);
+    let client_key = load_key(client_key_path);
+
+    let result = perform_operation(a, b, server_key, &client_key, operation);
+
+    println!("Result: {}", result);
 }
