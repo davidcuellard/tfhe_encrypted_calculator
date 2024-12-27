@@ -99,7 +99,7 @@ This will encrypt the numbers 5 and 3, add them, and print the decrypted result.
 
 ## Docs
 
-To run the docs, the nightly toolchain is needed. Here are the steps:
+To run the docs, the nightly toolchain is needed to avoid errors. Here are the steps:
 
 1. Install the nightly toolchain:
 
