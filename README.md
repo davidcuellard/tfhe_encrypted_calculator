@@ -10,7 +10,7 @@ For more detailed information about the tfhe-rs library and how to use it, visit
 
 ## Prerequisites
 
-Before running the Z-Calculator, ensure that you have the following:
+Before running the tfhe_encrypted_calculator, ensure that you have the following:
 
 - Rust installed: https://www.rust-lang.org/
 - cargo package manager (comes with Rust)
@@ -33,42 +33,42 @@ cargo build
    Generate and save the TFHE keys to a specified directory.
 
 ```bash
-z-calculator generate-keys --dir <directory_path>
+cargo run generate-keys --dir <directory_path>
 ```
 
 2. Add
    Perform encrypted addition on two numbers.
 
 ```bash
-z-calculator add --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
+cargo run add --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
 ```
 
 3. Subtract
    Perform encrypted subtraction on two numbers.
 
 ```bash
-z-calculator sub --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
+cargo run sub --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
 ```
 
 4. Multiply
    Perform encrypted multiplication on two numbers.
 
 ```bash
-z-calculator mul --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
+cargo run mul --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
 ```
 
 5. Divide
    Perform encrypted division on two numbers.
 
 ```bash
-z-calculator div --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
+cargo run div --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
 ```
 
 6. Modulo
    Perform encrypted modulo operation on two numbers.
 
 ```bash
-z-calculator mod --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
+cargo run mod --a <number_a> --b <number_b> --server-key-path <server_key_file> --client-key-path <client_key_file>
 ```
 
 ## How It Works
@@ -86,13 +86,13 @@ z-calculator mod --a <number_a> --b <number_b> --server-key-path <server_key_fil
 1. Generate Keys:
 
 ```bash
-z-calculator generate-keys --dir /tmp/z_calculator
+cargo run generate-keys --dir /tmp/z_calculator
 ```
 
 2. Add Two Numbers:
 
 ```bash
-z-calculator add --a 5 --b 3 --server-key-path /tmp/z_calculator/server_key.bin --client-key-path /tmp/z_calculator/client_key.bin
+cargo run add --a 5 --b 3 --server-key-path /tmp/z_calculator/server_key.bin --client-key-path /tmp/z_calculator/client_key.bin
 ```
 
 This will encrypt the numbers 5 and 3, add them, and print the decrypted result.

@@ -24,7 +24,7 @@ use tfhe::{generate_keys, set_server_key, ConfigBuilder, FheUint8};
 /// Command-line interface for the calculator
 #[derive(Parser)]
 #[command(
-    name = "z-calculator",
+    name = "tfhe_encrypted_calculator",
     about = "Calculator with TFHE - Rust implementation"
 )]
 struct Cli {
@@ -240,14 +240,20 @@ fn perform_operation(
 fn handle_operation(
     a: &u8,
     b: &u8,
-    server_key_path: &str,
-    client_key_path: &str,
+    server_key_path: &String,
+    client_key_path: &String,
     operation: fn(FheUint8, FheUint8) -> FheUint8,
 ) {
-    let server_key = load_key(server_key_path);
-    let client_key = load_key(client_key_path);
+    let server_key: ServerKey = load_key(server_key_path);
+    let client_key: ClientKey = load_key(client_key_path);
 
-    let result = perform_operation(a, b, server_key, &client_key, operation);
+    let a = FheUint8::try_encrypt(*a, &client_key).expect("Encryption of 'a' failed");
+    let b = FheUint8::try_encrypt(*b, &client_key).expect("Encryption of 'b' failed");
 
-    println!("Result: {}", result);
+    set_server_key(server_key);
+    let result = operation(a, b);
+
+    let decrypted_result: u8 = result.decrypt(&client_key);
+
+    println!("Result: {:?}", decrypted_result);
 }
