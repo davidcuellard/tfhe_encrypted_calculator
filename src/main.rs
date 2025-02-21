@@ -198,36 +198,6 @@ where
     bincode::deserialize(&encoded_key[..]).expect("Failed to deserialize key")
 }
 
-/// Perform an operation on encrypted data
-///
-/// # Arguments
-///
-/// * `a` - The first operand
-/// * `b` - The second operand
-/// * `server_key` - The server key
-/// * `client_key` - The client key
-/// * `operation` - The operation to perform
-///
-/// # Returns
-///
-/// The result of the operation
-fn perform_operation(
-    a: &u8,
-    b: &u8,
-    server_key: ServerKey,
-    client_key: &ClientKey,
-    operation: fn(FheUint8, FheUint8) -> FheUint8,
-) -> u8 {
-    set_server_key(server_key);
-
-    let a = FheUint8::try_encrypt(*a, client_key).expect("Encryption of 'a' failed");
-    let b = FheUint8::try_encrypt(*b, client_key).expect("Encryption of 'b' failed");
-
-    let result = operation(a, b);
-
-    result.decrypt(client_key)
-}
-
 /// Handle an operation command
 ///
 /// # Arguments
